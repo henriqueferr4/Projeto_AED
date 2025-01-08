@@ -9,101 +9,70 @@ Sistema de Gestão de estoque de loja e-commerce
 
 # Ler o CSV de estoque - OK
 def ler_estoque():
-    
-    arq = open("estoque.csv", "r")
-
-    produtos = arq.readlines()
-
     estoque = []
-
-    for linha in produtos:
-        estoque.append(linha.split(";"))
-
+    with open("estoque.csv", "r") as arq:
+        for linha in arq:
+            estoque.append(linha.strip().split(";"))
     return estoque
 
 # Cadastrar novos produtos - OK 
 def cadastrar_produto(estoque):
-    arq = open("estoque.csv", "a")
+    with open("estoque.csv", "a") as arq:
+        while True:
+            acao = input("Cadastrar novo produto (1 - Sim / 2 - Não): ")
+            if acao == "1":
+                codigo = input("Código: ").strip()
+                nome = input("Nome: ").strip()
+                quantidade = input("Quantidade: ").strip()
 
-    cadastrar = True
-    while cadastrar == True:
-        acao = input("Cadastrar novo produto (1 - Sim / 2 - Nao): ")
-        if acao == "1":
-            novo_produto = []
+                # Adiciona o novo produto ao arquivo
+                arq.write(f"{codigo};{nome};{quantidade}\n")
 
-            codigo = input("Código: ")
-            nome = input("Nome: ")
-            quantidade = input("Quantidade: ")
+                print("Produto cadastrado com sucesso.")
+            elif acao == "2":
+                print("Cadastro de produto finalizado.")
+                break
+            else:
+                print("Opção inválida.")
 
-            novo_produto.append(codigo)
-            novo_produto.append(nome)
-            novo_produto.append(quantidade)
-
-            arq.write(f"{novo_produto[0]};{novo_produto[1]};{novo_produto[2]}\n")
-
-            return "Produdo cadastrado com sucesso."
-        
-        elif acao == "2":
-            cadastrar == False
-            return "Cadastro de produto finalizado."
-
-        else:
-            cadastrar = False
-            return "Opção inválida."
-
-#Gerar uma lista com as informações atuais do estoque - ESTA MOSTRANDO SO A PRIMEIRA LINHA
+# Gerar uma lista com as informações atuais do estoque
 def lista_estoque(estoque):
-    
-    for produto in estoque: 
-        return f"Código: {produto[0]} Nome: {produto[1]} Quantidaede: {produto[2]} \n"
-               
+    saida = ""
+    for produto in estoque:
+        saida += f"Código: {produto[0]} Nome: {produto[1]} Quantidade: {produto[2]}\n"
+    return saida
+
 # Verificar quantidade de produtos em estoque - OK
-
 def verificar_quant(estoque):
-
     produto = input("Nome do produto: ")
+    for i in estoque:
+        if i[1] == produto:
+            return f"Quantidade atual: {i[2]}"
+    return "Produto não encontrado"
+
+# Lançamento de vendas
+def venda(estoque):
+    produto = input("Produto vendido: ")
+    quantidade = int(input("Quantidade vendida: "))
     
     encontrado = False
 
     for i in estoque:
         if i[1] == produto:
             encontrado = True
-            return f"Quantidade atual: {i[2]}"
-        
-        else: 
-           continue
-
-    if encontrado == False:
-        return "Produto nao encontrado" #Caso o produto digitado não seja encontrado
-        
-# Lançamento de vendas - COMO COLOCAR NOVA LINHA "\n" apenas no produto que foi lancada a venda?
-def venda(estoque):
-
-    produto = input("Produto vendido: ")
-    quantidade = int(input("Quantidade vendida: "))
-
-    encontrado = False
-
-    for i in estoque: 
-        if i[1] == produto:
-            encontrado = True
-            i[2] = int(i[2]) - quantidade
+            i[2] = str(int(i[2]) - quantidade)
             break
-        
-        else:
-            continue
-    if encontrado == False:
-        return "Produto nao encontrado"
-    
-    arq = open("estoque.csv", "w")
 
-    for produto in estoque:
-         arq.write(f"{produto[0]};{produto[1]};{produto[2]}") #Atualiza a quantidade no arquivo
+    if not encontrado:
+        return "Produto não encontrado"
+
+    with open("estoque.csv", "w") as arq:
+        for produto in estoque:
+            arq.write(f"{produto[0]};{produto[1]};{produto[2]}\n")
     return "Venda realizada com sucesso."
 
 
 # Utilização do sistema
-
 print("Bem-vindo ao Sistema de Gestão de Estoque")
 print("Selecione uma das opções abaixo:")
 print("0 - Verificar estoque")
@@ -113,45 +82,22 @@ print("3 - Lançar uma venda")
 print("4 - Sair")
 print("\n")
 
+estoque = ler_estoque()
+
 while True:
     acao = input("Opção: ")
-    
     if acao == '0':
-
-        estoque = ler_estoque()
-
-        saida = lista_estoque(estoque)
-        
-        print(saida)
-
+        print(lista_estoque(estoque))
     elif acao == '1':
-
-        estoque = ler_estoque()
-
-        cadastro = cadastrar_produto(estoque)
-
-        print(cadastro)
-        
+        cadastrar_produto(estoque)
+        estoque = ler_estoque()  # Atualiza o estoque após o cadastro
     elif acao == '2':
-
-        estoque = ler_estoque()
-
-        saida_quant = verificar_quant(estoque)
-
-        print(saida_quant)
-
+        print(verificar_quant(estoque))
     elif acao == '3':
-
-        estoque = ler_estoque()
-        
-        lancamento = venda(estoque)
-
-        print(lancamento)
-
+        print(venda(estoque))
+        estoque = ler_estoque()  # Atualiza o estoque após a venda
     elif acao == '4':
         print("Saindo do sistema...")
         break
-
     else:
         print("Opção inválida.")
-        break
